@@ -71,29 +71,36 @@ class SentryIntegration {
     }
 
     public static function init() {
-        $settings = self::getSettings();
-        
-        // Check if DSN is configured
-        if (empty($settings['sentry_dsn'])) {
-            return; // Sentry not configured
-        }
+        try {
+            $settings = self::getSettings();
+            
+            // Check if DSN is configured
+            if (empty($settings['sentry_dsn'])) {
+                return; // Sentry not configured
+            }
 
-        \Sentry\init([
-            'dsn' => $settings['sentry_dsn'],
-            'environment' => $settings['sentry_environment'],
-            'release' => 'namelessmc@' . (defined('NAMELESS_VERSION') ? NAMELESS_VERSION : '2.2.0'),
-            'error_types' => E_ALL,
-            'integrations' => [
-                new MonologIntegration(
-                    Logger::ERROR, // Only capture ERROR and above as issues
-                    true, // Capture context
-                    true  // Capture extra data
-                ),
-            ],
-            // Session Replay configuration from settings
-            'traces_sample_rate' => $settings['traces_sample_rate'],
-            'replays_session_sample_rate' => $settings['replays_session_sample_rate'],
-            'replays_on_error_sample_rate' => 1.0, // Always capture replay when there's an error
+            // Check if Sentry classes are available
+            if (!class_exists('\Sentry\init')) {
+                error_log('Sentry Integration: Sentry SDK not found. Run composer install in the module directory.');
+                return;
+            }
+
+            \Sentry\init([
+                'dsn' => $settings['sentry_dsn'],
+                'environment' => $settings['sentry_environment'],
+                'release' => 'namelessmc@' . (defined('NAMELESS_VERSION') ? NAMELESS_VERSION : '2.2.0'),
+                'error_types' => E_ALL,
+                'integrations' => [
+                    new MonologIntegration(
+                        Logger::ERROR, // Only capture ERROR and above as issues
+                        true, // Capture context
+                        true  // Capture extra data
+                    ),
+                ],
+                // Session Replay configuration from settings
+                'traces_sample_rate' => $settings['traces_sample_rate'],
+                'replays_session_sample_rate' => $settings['replays_session_sample_rate'],
+                'replays_on_error_sample_rate' => 1.0, // Always capture replay when there's an error
             // Configure which errors create issues vs just breadcrumbs
             'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
                 // Only send events that are ERROR level or above as issues
@@ -148,6 +155,11 @@ class SentryIntegration {
                 \Sentry\captureMessage("[PHP ERROR $severity] $message in $file:$line", \Sentry\Severity::error());
             }
         });
+        
+        } catch (Exception $e) {
+            // Log initialization error but don't break the site
+            error_log('Sentry Integration Init Error: ' . $e->getMessage());
+        }
     }
 
     /**
