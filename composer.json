@@ -1,0 +1,11 @@
+{
+  "require": {
+    "sentry/sentry": "^4.0",
+    "monolog/monolog": "^3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "SentryIntegration\\": "./"
+    }
+  }
+}
