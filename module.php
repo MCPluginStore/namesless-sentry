@@ -1,41 +1,39 @@
 <?php
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+use Monolog\Logger;
+use Sentry\Monolog\Handler as SentryHandler;
 use Sentry\SentrySdk;
 
-class NamelessSentry_Module extends Module
-{
-    public function __construct()
-    {
-        // Setup Monolog logger with Sentry handler
-        $this->logger = new Logger('sentry');
-        $this->logger->pushHandler(new SentryHandler(SentrySdk::getCurrentHub(), Logger::ERROR));
+class NamelessSentry_Module extends Module {
+    private $logger;
+
+    public function __construct() {
+        $name = 'NamelessSentry';
+        $author = 'YourName';
+        $module_version = '1.0.0';
+        $nameless_version = '2.0.0-pr13';
+
+        parent::__construct($this, $name, $author, $module_version, $nameless_version);
+
+        // Setup Monolog logger with Sentry handler (safe, only if dependencies exist)
+        if (class_exists('Monolog\\Logger') && class_exists('Sentry\\Monolog\\Handler')) {
+            $this->logger = new Logger('sentry');
+            $this->logger->pushHandler(new SentryHandler(SentrySdk::getCurrentHub(), Logger::ERROR));
+        }
     }
 
-    // Example NamelessMC required methods
-    public function onInstall() {
-        return true;
-    }
-    public function onUninstall() {
-        return true;
-    }
-    public function onEnable() {
-        return true;
-    }
-    public function onDisable() {
-        return true;
-    }
-    public function onPageLoad(User $user, Pages $pages, Cache $cache, $smarty, Traversable|array $navs, Widgets $widgets, TemplateBase $template) {
-        // Required empty method
-    }
+    public function onInstall() {}
+    public function onUninstall() {}
+    public function onEnable() {}
+    public function onDisable() {}
+    public function onPageLoad($user, $pages, $cache, $smarty, $navs, $widgets, $template) {}
     public function getDebugInfo(): array {
-        return ['version' => '1.0.0'];
+        return [];
     }
 
-    // Example logging usage
+    // Optional: logging helper
     public function logError($message, $context = []) {
-        $this->logger->error($message, $context);
+        if ($this->logger) {
+            $this->logger->error($message, $context);
+        }
     }
 }
