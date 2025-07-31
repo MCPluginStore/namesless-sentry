@@ -46,6 +46,20 @@ foreach ($files as $file) {
 
 // Try to load module class
 echo "<h2>Module Class Test</h2>";
+
+// First check if we can load NamelessMC context
+$nameless_root = dirname(dirname(__DIR__));
+if (file_exists($nameless_root . '/core/init.php')) {
+    echo "<p>Attempting to load NamelessMC context...</p>";
+    try {
+        // Try to include NamelessMC core to get Module class
+        require_once($nameless_root . '/core/init.php');
+        echo "<p class='success'>✅ NamelessMC context loaded</p>";
+    } catch (Exception $e) {
+        echo "<p class='warning'>⚠️ Could not load NamelessMC context: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
+}
+
 try {
     if (file_exists(__DIR__ . '/module.php')) {
         require_once(__DIR__ . '/module.php');
@@ -56,9 +70,9 @@ try {
             $reflection = new ReflectionClass('NamelessSentry_Module');
             $parent = $reflection->getParentClass();
             if ($parent) {
-                echo "<p>Parent class: " . $parent->getName() . "</p>";
+                echo "<p class='success'>✅ Extends: " . $parent->getName() . "</p>";
             } else {
-                echo "<p class='warning'>⚠️ No parent class found (Module class not available)</p>";
+                echo "<p class='warning'>⚠️ No parent class found (Module class not available - this is normal when testing outside NamelessMC)</p>";
             }
         } else {
             echo "<p class='error'>❌ NamelessSentry_Module class not found after requiring file</p>";
@@ -69,7 +83,12 @@ try {
 } catch (Exception $e) {
     echo "<p class='error'>❌ Exception loading module: " . htmlspecialchars($e->getMessage()) . "</p>";
 } catch (Error $e) {
-    echo "<p class='error'>❌ Fatal error loading module: " . htmlspecialchars($e->getMessage()) . "</p>";
+    if (strpos($e->getMessage(), 'Class "Module" not found') !== false) {
+        echo "<p class='warning'>⚠️ Module class not found - this is NORMAL when testing outside NamelessMC context</p>";
+        echo "<p>The module should work fine when enabled through NamelessMC admin panel.</p>";
+    } else {
+        echo "<p class='error'>❌ Fatal error loading module: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
 }
 
 // Check Composer autoload
@@ -80,10 +99,25 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
         echo "<p class='success'>✅ Composer autoload works</p>";
         
         // Check if Sentry is available
-        if (class_exists('Sentry\\init')) {
-            echo "<p class='success'>✅ Sentry SDK is available</p>";
+        if (function_exists('Sentry\\init')) {
+            echo "<p class='success'>✅ Sentry SDK is available (function)</p>";
+        } elseif (class_exists('Sentry\\ClientInterface')) {
+            echo "<p class='success'>✅ Sentry SDK is available (class)</p>";
+        } elseif (class_exists('Sentry\\State\\Hub')) {
+            echo "<p class='success'>✅ Sentry SDK is available (Hub class)</p>";
         } else {
             echo "<p class='error'>❌ Sentry SDK not found</p>";
+            
+            // Debug: List what Sentry classes are available
+            $sentry_classes = [];
+            foreach (get_declared_classes() as $class) {
+                if (strpos($class, 'Sentry') === 0) {
+                    $sentry_classes[] = $class;
+                }
+            }
+            if ($sentry_classes) {
+                echo "<p>Available Sentry classes: " . implode(', ', array_slice($sentry_classes, 0, 5)) . "</p>";
+            }
         }
         
         // Check if Monolog is available
