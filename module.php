@@ -1,15 +1,13 @@
 <?php
 
-// Check if Module class exists before trying to extend it
-if (!class_exists('Module')) {
-    error_log('NamelessSentry: Module class not available when loading module.php');
-    return;
-}
+error_log('NamelessSentry: module.php is being loaded');
 
-class NamelessSentry_Module extends Module
+// Simple test - don't extend anything yet
+class NamelessSentry_Module 
 {
     public function __construct($module, $pages)
     {
+        error_log('NamelessSentry: Constructor called');
     }
 
     public function onInstall()
@@ -41,3 +39,5 @@ class NamelessSentry_Module extends Module
         return array('version' => '1.0.0');
     }
 }
+
+error_log('NamelessSentry: module.php class defined');
