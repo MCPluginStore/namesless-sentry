@@ -18,6 +18,7 @@ class NamelessSentry_Module extends Module {
         if (class_exists('Sentry\\init')) {
             $sentryDsn = null;
             $sentryEnv = 'production';
+            $tracesSampleRate = 0.0;
             if (file_exists(__DIR__ . '/config.php')) {
                 $config = include(__DIR__ . '/config.php');
                 if (isset($config['sentry_dsn'])) {
@@ -26,11 +27,17 @@ class NamelessSentry_Module extends Module {
                 if (isset($config['sentry_env'])) {
                     $sentryEnv = $config['sentry_env'];
                 }
+                if (isset($config['sentry_traces_sample_rate'])) {
+                    $tracesSampleRate = (float)$config['sentry_traces_sample_rate'];
+                }
             }
             if ($sentryDsn) {
                 \Sentry\init([
                     'dsn' => $sentryDsn,
                     'environment' => $sentryEnv,
+                    // Enable tracing and distributed tracing
+                    'traces_sample_rate' => $tracesSampleRate > 0 ? $tracesSampleRate : 1.0, // Default to 100% if not set
+                    'enable_tracing' => true,
                 ]);
             }
         }
@@ -47,7 +54,17 @@ class NamelessSentry_Module extends Module {
     public function onUninstall() {}
     public function onEnable() {}
     public function onDisable() {}
-    public function onPageLoad($user, $pages, $cache, $smarty, $navs, $widgets, $template) {}
+    public function onPageLoad($user, $pages, $cache, $smarty, $navs, $widgets, $template) {
+        // Example: Start a Sentry transaction for distributed tracing
+        if (class_exists('Sentry\\SentrySdk')) {
+            $hub = SentrySdk::getCurrentHub();
+            $transaction = $hub->startTransaction('NamelessSentry_Module.onPageLoad', 'web.request');
+            $span = $transaction->startChild('custom.operation', 'NamelessSentry custom span');
+            // ... do work ...
+            $span->finish();
+            $transaction->finish();
+        }
+    }
     public function getDebugInfo(): array {
         return [];
     }
