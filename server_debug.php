@@ -47,48 +47,38 @@ foreach ($files as $file) {
 // Try to load module class
 echo "<h2>Module Class Test</h2>";
 
-// First check if we can load NamelessMC context
-$nameless_root = dirname(dirname(__DIR__));
-if (file_exists($nameless_root . '/core/init.php')) {
-    echo "<p>Attempting to load NamelessMC context...</p>";
-    try {
-        // Try to include NamelessMC core to get Module class
-        require_once($nameless_root . '/core/init.php');
-        echo "<p class='success'>✅ NamelessMC context loaded</p>";
-    } catch (Exception $e) {
-        echo "<p class='warning'>⚠️ Could not load NamelessMC context: " . htmlspecialchars($e->getMessage()) . "</p>";
-    }
-}
+// DON'T try to load NamelessMC context - it causes hangs
+echo "<p class='warning'>⚠️ Skipping NamelessMC context loading to avoid hangs</p>";
 
 try {
     if (file_exists(__DIR__ . '/module.php')) {
-        require_once(__DIR__ . '/module.php');
-        if (class_exists('NamelessSentry_Module')) {
-            echo "<p class='success'>✅ NamelessSentry_Module class loads successfully</p>";
-            
-            // Try to check if it extends Module (would need NamelessMC)
-            $reflection = new ReflectionClass('NamelessSentry_Module');
-            $parent = $reflection->getParentClass();
-            if ($parent) {
-                echo "<p class='success'>✅ Extends: " . $parent->getName() . "</p>";
-            } else {
-                echo "<p class='warning'>⚠️ No parent class found (Module class not available - this is normal when testing outside NamelessMC)</p>";
-            }
+        // Check PHP syntax without loading
+        $output = shell_exec("php -l " . escapeshellarg(__DIR__ . '/module.php') . " 2>&1");
+        if (strpos($output, 'No syntax errors') !== false) {
+            echo "<p class='success'>✅ module.php syntax is valid</p>";
         } else {
-            echo "<p class='error'>❌ NamelessSentry_Module class not found after requiring file</p>";
+            echo "<p class='error'>❌ module.php syntax errors: " . htmlspecialchars($output) . "</p>";
         }
+        
+        // Check if class name appears in file
+        $module_content = file_get_contents(__DIR__ . '/module.php');
+        if (strpos($module_content, 'class NamelessSentry_Module') !== false) {
+            echo "<p class='success'>✅ NamelessSentry_Module class is defined</p>";
+        } else {
+            echo "<p class='error'>❌ NamelessSentry_Module class not found in module.php</p>";
+        }
+        
+        if (strpos($module_content, 'extends Module') !== false) {
+            echo "<p class='success'>✅ Class extends Module</p>";
+        } else {
+            echo "<p class='error'>❌ Class doesn't extend Module</p>";
+        }
+        
     } else {
         echo "<p class='error'>❌ module.php file not found</p>";
     }
 } catch (Exception $e) {
-    echo "<p class='error'>❌ Exception loading module: " . htmlspecialchars($e->getMessage()) . "</p>";
-} catch (Error $e) {
-    if (strpos($e->getMessage(), 'Class "Module" not found') !== false) {
-        echo "<p class='warning'>⚠️ Module class not found - this is NORMAL when testing outside NamelessMC context</p>";
-        echo "<p>The module should work fine when enabled through NamelessMC admin panel.</p>";
-    } else {
-        echo "<p class='error'>❌ Fatal error loading module: " . htmlspecialchars($e->getMessage()) . "</p>";
-    }
+    echo "<p class='error'>❌ Exception checking module: " . htmlspecialchars($e->getMessage()) . "</p>";
 }
 
 // Check Composer autoload
