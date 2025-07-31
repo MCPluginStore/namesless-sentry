@@ -15,45 +15,27 @@ class NamelessSentry_Module extends Module
     }
 
     // Example NamelessMC required methods
-    public function onInstall() {}
-    public function onUninstall() {}
-    public function onEnable() {}
-    public function onDisable() {}
-    public function onPageLoad() {}
-    public function getDebugInfo() { return ['status' => 'ok']; }
+    public function onInstall() {
+        return true;
+    }
+    public function onUninstall() {
+        return true;
+    }
+    public function onEnable() {
+        return true;
+    }
+    public function onDisable() {
+        return true;
+    }
+    public function onPageLoad() {
+        // Required empty method
+    }
+    public function getDebugInfo() {
+        return ['version' => '1.0.0'];
+    }
 
     // Example logging usage
     public function logError($message, $context = []) {
         $this->logger->error($message, $context);
-    }
-
-    public function onInstall()
-    {
-        return true;
-    }
-
-    public function onUninstall()
-    {
-        return true;
-    }
-
-    public function onEnable()
-    {
-        return true;
-    }
-
-    public function onDisable()
-    {
-        return true;
-    }
-
-    public function onPageLoad()
-    {
-        // Required empty method
-    }
-
-    public function getDebugInfo()
-    {
-        return ['version' => '1.0.0'];
     }
 }
