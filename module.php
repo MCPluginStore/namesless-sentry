@@ -3,7 +3,25 @@ use Sentry\SentrySdk;
 
 class NamelessSentry_Module extends Module
 {
-    public function __construct($module, $pages)
+    public function __construct()
+    {
+        // Setup Monolog logger with Sentry handler
+        $this->logger = new Logger('sentry');
+        $this->logger->pushHandler(new SentryHandler(SentrySdk::getCurrentHub(), Logger::ERROR));
+    }
+
+    // Example NamelessMC required methods
+    public function onInstall() {}
+    public function onUninstall() {}
+    public function onEnable() {}
+    public function onDisable() {}
+    public function onPageLoad() {}
+    public function getDebugInfo() { return ['status' => 'ok']; }
+
+    // Example logging usage
+    public function logError($message, $context = []) {
+        $this->logger->error($message, $context);
+    }
     {
         try {
             // Load Composer autoload for Sentry SDK
@@ -55,7 +73,10 @@ class NamelessSentry_Module extends Module
         // Required empty method
     }
 
-    public function getDebugInfo(): array
+    public function getDebugInfo()
+    {
+        return ['version' => '1.0.0'];
+    }
     {
         return ['version' => '1.0.0'];
     }

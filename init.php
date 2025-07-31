@@ -1,14 +1,14 @@
 <?php
-/*
- * NamelessSentry Module Init - Working version
- */
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/module.php';
 
-try {
-    require_once(__DIR__ . '/module.php');
-    $sentry_module = new NamelessSentry_Module($module, $pages);
-} catch (Exception $e) {
-    error_log('NamelessSentry Exception: ' . $e->getMessage());
-} catch (Error $e) {
-    error_log('NamelessSentry Error: ' . $e->getMessage());
+$config = require __DIR__ . '/config.php';
+if (!empty($config['sentry_dsn'])) {
+    Sentry\init([
+        'dsn' => $config['sentry_dsn'],
+        'environment' => $config['environment'],
+    ]);
 }
+
+// The previous code has been replaced with a clean module loader.
 ?>
