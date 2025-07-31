@@ -8,9 +8,9 @@ class NamelessSentry_Module extends Module {
 
     public function __construct() {
         $name = 'NamelessSentry';
-        $author = 'YourName';
+        $author = 'Enno Gelhaus';
         $module_version = '1.0.0';
-        $nameless_version = '2.0.0-pr13';
+        $nameless_version = '2.2.0';
 
         parent::__construct($this, $name, $author, $module_version, $nameless_version);
 
