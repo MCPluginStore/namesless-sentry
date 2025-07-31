@@ -67,6 +67,20 @@ class NamelessSentry_Module extends Module {
         return true;
     }
 
+    public function onPageLoad() {
+        // This method is called on every page load
+        // We can use this to set user context or add breadcrumbs
+        
+        // Set user context if user is logged in
+        if (isset($GLOBALS['user']) && $GLOBALS['user']->isLoggedIn()) {
+            \SentryIntegration\SentryIntegration::setUserContext([
+                'id' => $GLOBALS['user']->data()->id,
+                'username' => $GLOBALS['user']->data()->username,
+                'email' => $GLOBALS['user']->data()->email ?? null
+            ]);
+        }
+    }
+
     public function getDebugInfo(): array {
         return [
             'version' => '1.0.0',
