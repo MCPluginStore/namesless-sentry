@@ -1,4 +1,11 @@
 <?php
+
+// Check if Module class exists before trying to extend it
+if (!class_exists('Module')) {
+    error_log('NamelessSentry: Module class not available when loading module.php');
+    return;
+}
+
 class NamelessSentry_Module extends Module
 {
     public function __construct($module, $pages)
