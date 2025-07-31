@@ -3,7 +3,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-<?php
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/module.php';
 
@@ -14,6 +14,3 @@ if (!empty($config['sentry_dsn'])) {
         'environment' => $config['environment'],
     ]);
 }
-
-// The previous code has been replaced with a clean module loader.
-?>
