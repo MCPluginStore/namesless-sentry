@@ -30,7 +30,7 @@ class NamelessSentry_Module extends Module
     public function onPageLoad(User $user, Pages $pages, Cache $cache, $smarty, Traversable|array $navs, Widgets $widgets, TemplateBase $template) {
         // Required empty method
     }
-    public function getDebugInfo() {
+    public function getDebugInfo(): array {
         return ['version' => '1.0.0'];
     }
 
