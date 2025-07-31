@@ -1,5 +1,5 @@
 <?php
-class SentryIntegration_Module extends Module {
+class NamelessSentry_Module extends Module {
     private $_module;
 
     public function __construct($module, $pages) {

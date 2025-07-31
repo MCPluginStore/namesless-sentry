@@ -1,3 +1,6 @@
 <?php
+// Load the module class
+require_once(__DIR__ . '/module.php');
+
 // Initialize module
-$module = new SentryIntegration_Module($this, $pages);
+$module = new NamelessSentry_Module($this, $pages);
