@@ -91,13 +91,18 @@ class SentryIntegration {
             );
             self::$logger->pushHandler($sentryHandler);
             
-            // Optionally add file handler for all logs
-            $fileHandler = new StreamHandler(__DIR__ . '/logs/sentry.log', Logger::DEBUG);
-            self::$logger->pushHandler($fileHandler);
+            // Only add file handler if logs directory exists
+            $logs_dir = __DIR__ . '/logs';
+            if (is_dir($logs_dir) && is_writable($logs_dir)) {
+                $fileHandler = new StreamHandler($logs_dir . '/sentry.log', Logger::DEBUG);
+                self::$logger->pushHandler($fileHandler);
+            }
             
         } catch (\Exception $e) {
             // Silently fail
             error_log('Sentry logger initialization error: ' . $e->getMessage());
+        }
+    }
         }
     }
 
