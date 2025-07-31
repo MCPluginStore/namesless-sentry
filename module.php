@@ -23,9 +23,22 @@ class SentryIntegration_Module extends Module {
         // Only inject on frontend pages, not admin panel
         if (defined('PANEL_PAGE')) return;
 
-        // Check if frontend integration is enabled
-        $enable_frontend = true; // TODO: Get from settings
-        if (!$enable_frontend) return;
+        // Check if frontend integration is enabled via database settings
+        try {
+            $db = DB::getInstance();
+            $frontend_setting = $db->get('settings', ['name', '=', 'sentry_enable_frontend']);
+            $enable_frontend = $frontend_setting->count() ? (bool)$frontend_setting->first()->value : true;
+            
+            if (!$enable_frontend) return;
+
+            // Check if DSN is configured
+            $dsn_setting = $db->get('settings', ['name', '=', 'sentry_dsn']);
+            if (!$dsn_setting->count() || empty($dsn_setting->first()->value)) return;
+
+        } catch (Exception $e) {
+            // If database access fails, skip frontend integration
+            return;
+        }
 
         // Add Sentry JavaScript to template
         $sentry_js = \SentryIntegration\SentryIntegration::getJavaScriptConfig();

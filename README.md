@@ -26,24 +26,7 @@ This will install:
 - `sentry/sentry ^4.0`
 - `monolog/monolog ^3.0`
 
-### 2. Configure Environment
-
-Set your Sentry DSN as an environment variable:
-
-```bash
-# Windows (PowerShell)
-$env:SENTRY_DSN = "https://your-dsn@sentry.io/project-id"
-
-# Linux/Mac
-export SENTRY_DSN="https://your-dsn@sentry.io/project-id"
-```
-
-Or add it to your `.env` file if using one:
-```env
-SENTRY_DSN=https://your-dsn@sentry.io/project-id
-```
-
-### 3. Install Module
+### 2. Install Module
 
 1. Copy the entire `SentryIntegration` folder to your NamelessMC `modules/` directory
 2. The structure should look like:
@@ -60,13 +43,24 @@ SENTRY_DSN=https://your-dsn@sentry.io/project-id
        └── vendor/ (after composer install)
    ```
 
-### 4. Enable Module
+### 3. Enable Module
 
 1. Go to your NamelessMC Admin Panel
 2. Navigate to **Modules**
 3. Find **SentryIntegration** and click **Enable**
 4. Go to **Module Settings** → **Sentry Integration Settings**
-5. Configure your settings and test the connection
+5. Configure your Sentry DSN and other settings
+
+### 4. Configure Settings
+
+In the admin panel settings page, configure:
+
+- **Sentry DSN**: Your project's DSN from Sentry (e.g., `https://abc123@o0.ingest.sentry.io/12345`)
+- **Environment**: Environment name (production, staging, development)
+- **Frontend Integration**: Enable/disable JavaScript error tracking
+- **Session Replay**: Enable/disable session recording
+- **User Feedback**: Enable/disable feedback widget
+- **Sample Rates**: Configure performance monitoring and replay sampling
 
 ### 5. Add Frontend Integration (Optional)
 

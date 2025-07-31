@@ -9,16 +9,79 @@ use Sentry\UserFeedback;
 
 class SentryIntegration {
     private static $logger = null;
+    private static $settings = null;
+
+    /**
+     * Get module settings from NamelessMC
+     */
+    private static function getSettings(): array {
+        if (self::$settings === null) {
+            // Initialize default settings
+            self::$settings = [
+                'sentry_dsn' => '',
+                'sentry_environment' => 'production',
+                'enable_frontend_integration' => true,
+                'enable_session_replay' => true,
+                'enable_user_feedback' => true,
+                'traces_sample_rate' => 0.1,
+                'replays_session_sample_rate' => 0.1,
+            ];
+
+            // Try to get settings from NamelessMC database
+            try {
+                if (class_exists('DB')) {
+                    $database = \DB::getInstance();
+                    
+                    // Get all Sentry-related settings
+                    $sentry_settings = $database->query("SELECT `name`, `value` FROM nl2_settings WHERE `name` LIKE 'sentry_%'")->results();
+                    
+                    foreach ($sentry_settings as $setting) {
+                        switch ($setting->name) {
+                            case 'sentry_dsn':
+                                self::$settings['sentry_dsn'] = $setting->value;
+                                break;
+                            case 'sentry_environment':
+                                self::$settings['sentry_environment'] = $setting->value;
+                                break;
+                            case 'sentry_enable_frontend':
+                                self::$settings['enable_frontend_integration'] = (bool)$setting->value;
+                                break;
+                            case 'sentry_enable_replay':
+                                self::$settings['enable_session_replay'] = (bool)$setting->value;
+                                break;
+                            case 'sentry_enable_feedback':
+                                self::$settings['enable_user_feedback'] = (bool)$setting->value;
+                                break;
+                            case 'sentry_traces_sample_rate':
+                                self::$settings['traces_sample_rate'] = (float)$setting->value;
+                                break;
+                            case 'sentry_replays_sample_rate':
+                                self::$settings['replays_session_sample_rate'] = (float)$setting->value;
+                                break;
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // If database access fails, fall back to environment variables
+                self::$settings['sentry_dsn'] = getenv('SENTRY_DSN') ?: '';
+            }
+        }
+        
+        return self::$settings;
+    }
 
     public static function init() {
-        if (!getenv('SENTRY_DSN')) {
-            return;
+        $settings = self::getSettings();
+        
+        // Check if DSN is configured
+        if (empty($settings['sentry_dsn'])) {
+            return; // Sentry not configured
         }
 
         \Sentry\init([
-            'dsn' => getenv('SENTRY_DSN'),
-            'environment' => defined('ENVIRONMENT') ? ENVIRONMENT : 'production',
-            'release' => 'namelessmc@' . NAMELESS_VERSION,
+            'dsn' => $settings['sentry_dsn'],
+            'environment' => $settings['sentry_environment'],
+            'release' => 'namelessmc@' . (defined('NAMELESS_VERSION') ? NAMELESS_VERSION : '2.2.0'),
             'error_types' => E_ALL,
             'integrations' => [
                 new MonologIntegration(
@@ -27,9 +90,9 @@ class SentryIntegration {
                     true  // Capture extra data
                 ),
             ],
-            // Session Replay configuration
-            'traces_sample_rate' => 0.1, // Capture 10% of transactions for performance monitoring
-            'replays_session_sample_rate' => 0.1, // Capture 10% of sessions for replay
+            // Session Replay configuration from settings
+            'traces_sample_rate' => $settings['traces_sample_rate'],
+            'replays_session_sample_rate' => $settings['replays_session_sample_rate'],
             'replays_on_error_sample_rate' => 1.0, // Always capture replay when there's an error
             // Configure which errors create issues vs just breadcrumbs
             'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
@@ -230,18 +293,29 @@ class SentryIntegration {
      * Generate JavaScript configuration for frontend Sentry integration
      * This should be included in your HTML template to enable browser-side error tracking
      * 
-     * @param bool $includeReplay Whether to include session replay
-     * @param bool $includeFeedback Whether to include user feedback widget
+     * @param bool $includeReplay Whether to include session replay (override settings)
+     * @param bool $includeFeedback Whether to include user feedback widget (override settings)
      * @return string JavaScript code to initialize Sentry in the browser
      */
-    public static function getJavaScriptConfig(bool $includeReplay = true, bool $includeFeedback = true): string {
-        $dsn = getenv('SENTRY_DSN');
-        if (!$dsn) {
-            return '// Sentry DSN not configured';
+    public static function getJavaScriptConfig(bool $includeReplay = null, bool $includeFeedback = null): string {
+        $settings = self::getSettings();
+        
+        // Check if DSN is configured
+        if (empty($settings['sentry_dsn'])) {
+            return '// Sentry DSN not configured in module settings';
         }
 
-        $environment = defined('ENVIRONMENT') ? ENVIRONMENT : 'production';
-        $release = 'namelessmc@' . NAMELESS_VERSION;
+        // Check if frontend integration is enabled
+        if (!$settings['enable_frontend_integration']) {
+            return '// Sentry frontend integration disabled in module settings';
+        }
+
+        // Use settings or method parameters
+        $includeReplay = $includeReplay !== null ? $includeReplay : $settings['enable_session_replay'];
+        $includeFeedback = $includeFeedback !== null ? $includeFeedback : $settings['enable_user_feedback'];
+
+        $environment = $settings['sentry_environment'];
+        $release = 'namelessmc@' . (defined('NAMELESS_VERSION') ? NAMELESS_VERSION : '2.2.0');
 
         $integrations = [];
         
@@ -274,11 +348,11 @@ class SentryIntegration {
 
         // Extract the project ID from DSN for the loader script
         $projectId = '';
-        if (preg_match('/https:\/\/([a-f0-9]+)@([^\/]+)\/(\d+)/', $dsn, $matches)) {
+        if (preg_match('/https:\/\/([a-f0-9]+)@([^\/]+)\/(\d+)/', $settings['sentry_dsn'], $matches)) {
             $projectId = $matches[1];
         }
 
-        return <<<JAVASCRIPT
+        $javascript = <<<JAVASCRIPT
 <script
   src="https://js-de.sentry-cdn.com/{$projectId}.min.js"
   crossorigin="anonymous"
@@ -289,11 +363,11 @@ window.sentryOnLoad = function() {
         environment: "{$environment}",
         release: "{$release}",
         sendDefaultPii: true,
-        // Session Replay - 10% sample rate in production, 100% on errors
-        replaysSessionSampleRate: 0.1,
+        // Session Replay - configurable sample rates from settings
+        replaysSessionSampleRate: {$settings['replays_session_sample_rate']},
         replaysOnErrorSampleRate: 1.0,
         // Performance monitoring
-        tracesSampleRate: 0.1,
+        tracesSampleRate: {$settings['traces_sample_rate']},
         beforeSend: function(event, hint) {
             // Only send errors and above, filter out lower level events
             if (event.level && ['debug', 'info'].includes(event.level)) {

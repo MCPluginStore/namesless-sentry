@@ -61,9 +61,18 @@
                             <form action="" method="post">
                                 <div class="form-group">
                                     <label for="sentry_dsn">{$SENTRY_DSN} *</label>
-                                    <input type="text" class="form-control" id="sentry_dsn" name="sentry_dsn" placeholder="https://your-dsn@sentry.io/project-id" value="{$SENTRY_DSN_VALUE}">
+                                    <input type="text" class="form-control" id="sentry_dsn" name="sentry_dsn" placeholder="https://your-key@o0.ingest.sentry.io/project-id" value="{$SENTRY_DSN_VALUE}">
                                     <small class="form-text text-muted">{$SENTRY_DSN_HELP}</small>
                                 </div>
+
+                                <div class="form-group">
+                                    <label for="sentry_environment">{$SENTRY_ENVIRONMENT}</label>
+                                    <input type="text" class="form-control" id="sentry_environment" name="sentry_environment" placeholder="production" value="{$SENTRY_ENVIRONMENT_VALUE}">
+                                    <small class="form-text text-muted">{$SENTRY_ENVIRONMENT_HELP}</small>
+                                </div>
+
+                                <hr>
+                                <h6>Frontend Integration</h6>
 
                                 <div class="form-group">
                                     <div class="form-check">
@@ -72,7 +81,42 @@
                                             {$ENABLE_FRONTEND}
                                         </label>
                                     </div>
-                                    <small class="form-text text-muted">Enable JavaScript error tracking and user feedback widget</small>
+                                    <small class="form-text text-muted">{$ENABLE_FRONTEND_HELP}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="enable_replay" id="enable_replay" value="1" {if $ENABLE_REPLAY_VALUE}checked{/if}>
+                                        <label class="form-check-label" for="enable_replay">
+                                            {$ENABLE_REPLAY}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">{$ENABLE_REPLAY_HELP}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="enable_feedback" id="enable_feedback" value="1" {if $ENABLE_FEEDBACK_VALUE}checked{/if}>
+                                        <label class="form-check-label" for="enable_feedback">
+                                            {$ENABLE_FEEDBACK}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">{$ENABLE_FEEDBACK_HELP}</small>
+                                </div>
+
+                                <hr>
+                                <h6>Performance & Sampling</h6>
+
+                                <div class="form-group">
+                                    <label for="traces_sample_rate">{$TRACES_SAMPLE_RATE}</label>
+                                    <input type="number" class="form-control" id="traces_sample_rate" name="traces_sample_rate" min="0" max="1" step="0.1" value="{$TRACES_SAMPLE_RATE_VALUE}">
+                                    <small class="form-text text-muted">{$TRACES_SAMPLE_RATE_HELP}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="replays_sample_rate">{$REPLAYS_SAMPLE_RATE}</label>
+                                    <input type="number" class="form-control" id="replays_sample_rate" name="replays_sample_rate" min="0" max="1" step="0.1" value="{$REPLAYS_SAMPLE_RATE_VALUE}">
+                                    <small class="form-text text-muted">{$REPLAYS_SAMPLE_RATE_HELP}</small>
                                 </div>
 
                                 <div class="form-group">
@@ -85,7 +129,7 @@
 
                             <h5>Integration Status</h5>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="card">
                                         <div class="card-body">
                                             <h6 class="card-title">Backend Integration</h6>
@@ -101,17 +145,68 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="card">
                                         <div class="card-body">
                                             <h6 class="card-title">Frontend Integration</h6>
                                             <p class="card-text">
                                                 {if $ENABLE_FRONTEND_VALUE && $SENTRY_DSN_VALUE}
                                                     <span class="badge badge-success">Active</span>
-                                                    JavaScript errors, session replay, and user feedback enabled
+                                                    JavaScript errors being tracked
                                                 {else}
                                                     <span class="badge badge-warning">Inactive</span>
                                                     Enable frontend integration and configure DSN
+                                                {/if}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Session Replay</h6>
+                                            <p class="card-text">
+                                                {if $ENABLE_REPLAY_VALUE && $ENABLE_FRONTEND_VALUE && $SENTRY_DSN_VALUE}
+                                                    <span class="badge badge-success">Active</span>
+                                                    Recording {$REPLAYS_SAMPLE_RATE_VALUE * 100}% of sessions
+                                                {else}
+                                                    <span class="badge badge-warning">Inactive</span>
+                                                    Enable replay and frontend integration
+                                                {/if}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">User Feedback</h6>
+                                            <p class="card-text">
+                                                {if $ENABLE_FEEDBACK_VALUE && $ENABLE_FRONTEND_VALUE && $SENTRY_DSN_VALUE}
+                                                    <span class="badge badge-success">Active</span>
+                                                    Users can report bugs directly
+                                                {else}
+                                                    <span class="badge badge-warning">Inactive</span>
+                                                    Enable feedback widget and frontend integration
+                                                {/if}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Performance Monitoring</h6>
+                                            <p class="card-text">
+                                                {if $SENTRY_DSN_VALUE}
+                                                    <span class="badge badge-success">Active</span>
+                                                    Monitoring {$TRACES_SAMPLE_RATE_VALUE * 100}% of transactions
+                                                {else}
+                                                    <span class="badge badge-warning">Inactive</span>
+                                                    Configure DSN to enable
                                                 {/if}
                                             </p>
                                         </div>
