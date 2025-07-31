@@ -1,9 +1,10 @@
 <?php
 /*
- * NamelessSentry Module Init - Minimal version
+ * NamelessSentry Module Init - Ultra simple version
  */
 
 error_log('NamelessSentry: init.php started');
+error_log('NamelessSentry: Available variables: ' . implode(', ', array_keys(get_defined_vars())));
 
 try {
     if (!file_exists(__DIR__ . '/module.php')) {
@@ -21,7 +22,8 @@ try {
     }
 
     error_log('NamelessSentry: about to instantiate module');
-    $module = new NamelessSentry_Module($this, $pages);
+    // Try with null values first to see if it works
+    $module = new NamelessSentry_Module(null, null);
     error_log('NamelessSentry: module instantiated successfully');
     
 } catch (Exception $e) {
