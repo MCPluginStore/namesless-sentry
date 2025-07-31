@@ -55,13 +55,12 @@ class NamelessSentry_Module extends Module {
     public function onEnable() {}
     public function onDisable() {}
     public function onPageLoad($user, $pages, $cache, $smarty, $navs, $widgets, $template) {
-        // Example: Start a Sentry transaction for distributed tracing
+        // Start a Sentry transaction for every page load
         if (class_exists('Sentry\\SentrySdk')) {
             $hub = SentrySdk::getCurrentHub();
-            $transaction = $hub->startTransaction('NamelessSentry_Module.onPageLoad', 'web.request');
-            $span = $transaction->startChild('custom.operation', 'NamelessSentry custom span');
-            // ... do work ...
-            $span->finish();
+            $transaction = $hub->startTransaction('NamelessMC Page Load', 'web.request');
+            // Optionally, add spans for specific operations here
+            // ... your page logic ...
             $transaction->finish();
         }
     }
