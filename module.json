@@ -3,6 +3,5 @@
   "author": "Enno Gelhaus",
   "module_version": "1.0.0",
   "nameless_version": "2.2.0",
-  "description": "Comprehensive Sentry error tracking and monitoring integration for NamelessMC",
-  "settings": "core/sentry_settings"
+  "description": "Comprehensive Sentry error tracking and monitoring integration for NamelessMC"
 }
