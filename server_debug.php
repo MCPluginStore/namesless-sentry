@@ -130,6 +130,7 @@ echo "<p>Expected NamelessMC root: $nameless_root</p>";
 
 if (file_exists($nameless_root . '/core/init.php')) {
     echo "<p class='success'>✅ NamelessMC core found</p>";
+    echo "<p class='warning'>⚠️ NOT loading NamelessMC core to avoid ErrorHandler issue</p>";
 } else {
     echo "<p class='error'>❌ NamelessMC core not found at expected location</p>";
 }
